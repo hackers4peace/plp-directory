@@ -1,0 +1,15 @@
+{
+  "name": "opendir",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "~4.6.1",
+    "superagent": "~0.18.2"
+  }
+}
