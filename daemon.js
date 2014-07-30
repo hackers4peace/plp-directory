@@ -51,6 +51,17 @@ function getProfileUrl(profile,domain){
   return "";
 }
 
+daemon.get('/creator', function(req, res){
+
+  console.log(req.body);
+
+  res.set('Content-Type', 'text/html');
+  res.send(new Buffer('some html'));
+
+  // res.redirect('creator.html');
+
+}); 
+
 daemon.post('/new', function(req, res){
   console.log(req.body);
   superagent.get(req.body.url)
