@@ -1,5 +1,5 @@
 {
-  "name": "opendir",
+  "name": "nodejs-plp-directory-impl",
   "version": "0.0.0",
   "description": "",
   "main": "index.js",

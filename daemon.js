@@ -1,3 +1,4 @@
+var fs = require('fs');
 var express = require('express');
 var bodyParser = require('body-parser');
 var superagent = require('superagent');
@@ -7,40 +8,38 @@ var _ = require('lodash');
 var daemon = express();
 daemon.use(bodyParser.json());
 
-daemon.get('/new', function(req, res){
-  res.send(200, "FORM");
+// listProfile: Receives the URI (probably from a plp-editor) and adds it to the list
+daemon.post('/listProfile', function(req, res){
+
+  // Get the URI where the profile is stored
+  var profileUri = req.data;
+
+  // Assign uuid and store in FS
+  var path = 'data/listings'+uuid.v4();
+
+  fs.writeFile(path,profileUri, function (err) {
+
+    if (err) {    
+      console.log(err);
+      res.send(500, 'Something is wrong with the URI');
+      throw err;
+    }
+
+    console.log('Saved profile to '+path);
+
+    // Reference to this listing should be appended to the profile before returning it
+
+    res.send(200, profileUri);
+
+  });
+
 });
 
-function getProfileUrl(profile,domain){
-	return _.find(profile.contactPoint,function(point){
-		return point.id.match(domain);
-	}).id;
-}
+// getProfiles: Returns the profiles listed on this plp-directory
+daemon.get('/getProfiles', function(req, res){
 
-daemon.post('/new', function(req, res){
-  console.log(req.body);
-  superagent.get(req.body.url)
-    .accept('json')
-    .end(function(data){
-      //console.log(data.body);
-      
-      var profile = data.body;
-      
-      result = {"id" : uuid.v4(),
-      			"country" : profile.homeLocation.name,
-      			"city" : profile.currentLocation.name,
-      			"name" : profile.name,
-      			"shortbio" : profile.description,
-      			"website" : profile.id,
-      			"twitter" : getProfileUrl(profile,"twitter.com"),
-      			"github" : getProfileUrl(profile,"github.com"),
-      			"facebook" : getProfileUrl(profile,"facebook.com")      			
-      			};
-      			
-      console.log(result);
-      
-    });
-  res.send(200, "Yo Dawg!");
+  // Loop through the profile folder and return URIs
+
 });
 
 daemon.listen(3000);
