@@ -19,7 +19,6 @@ module.exports = function(grunt){
 
   grunt.loadNpmTasks('grunt-develop');
   grunt.loadNpmTasks('grunt-contrib-watch');
-
   grunt.registerTask('default', ['develop', 'watch']);
 
 };
