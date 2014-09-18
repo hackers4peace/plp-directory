@@ -8,6 +8,9 @@ var _ = require('lodash');
 var daemon = express();
 daemon.use(bodyParser.json())
 
+daemon.use(cors({ origin: true }));
+daemon.options('*', cors());
+
 // listProfile: Receives the URI (probably from a plp-editor) and adds it to the list
 daemon.post('/listProfile', function(req, res){
 
@@ -20,7 +23,7 @@ daemon.post('/listProfile', function(req, res){
 
   fs.writeFile(path,profileUri, function (err) {
 
-    if (err) {    
+    if (err) {
       console.log(err);
       res.send(500, 'Something is wrong with the URI');
       throw err;
@@ -39,6 +42,8 @@ daemon.post('/listProfile', function(req, res){
 // getProfiles: Returns the profiles listed on this plp-directory
 daemon.get('/getProfiles', function(req, res){
 
+  // FIXME: Read files asynchronously and add error checking (file does not exist)
+
   // Create object to store profile URIs
   var profiles = new Object();
 
@@ -56,6 +61,22 @@ daemon.get('/getProfiles', function(req, res){
 
   // Once all files have been looped, return the JSON object
   res.send(200,JSON.stringify(profiles));
+
+});
+
+// getProfile: Returns the profile specified by uuid parameter
+daemon.get('/getProfile/:uuid', function(req, res){
+
+  // FIXME: Read files asynchronously and add error checking (files does not exist)
+
+  // Get the uuid from the parameter
+  var uuid = req.params.uuid;
+
+  // Extract the content of the profile which is stored under data/profiles
+  var profile = fs.readFileSync('data/profiles/'+uuid,{encoding:"utf8"});
+
+  // Return it
+  res.send(200, profile);
 
 });
 
