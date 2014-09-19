@@ -2,18 +2,57 @@
 
 Portable Linked Profile Directory. This repo will host definitions and implementations for Directories working with PLP
 
-# What is a PLP directory?
+## What is a PLP directory?
 
 PLP Directories add logic around the profiles. They pull profiles from providers and serve them to Browsers. Possible logic could be validation, authentication, notification, etc...
 
-# Interface methods
+## API
 
-- listProfile
-- unlistProfile
-- requestProfileUpdate
-- getProfiles
-- queryProfiles
+We evaluate [Hydra](http://www.hydra-cg.com/) and [LDP](http://www.w3.org/TR/ldp/), for now simple Level-3 REST
 
+### GET /
+
+status: *implementing*
+
+returns all listings in directory
+
+### POST /
+
+status: *implementing*
+
+adds listing to directory
+
+### GET /:uuid
+
+status: *planned*
+
+gets single listing
+
+### PUT /:uuid
+
+status: *planned*
+
+requests update of a listing
+
+### DELETE /:uuid
+
+status: *planned*
+
+requests deletion of a listing
+
+
+## Setup
+
+```bash
+$ cp config.example.js config.js
+```
+
+edit *config.js* to specify your domain and port
+
+```bash
+$ npm install
+$ grunt
+```
 
 ## Unlicense
 
