@@ -1,12 +1,14 @@
 var fs = require('fs');
 var express = require('express');
+var cors = require('cors');
 var bodyParser = require('body-parser');
 var superagent = require('superagent');
 var uuid = require('uuid');
 var _ = require('lodash');
+var config = require('./config');
 
 var daemon = express();
-daemon.use(bodyParser.json())
+daemon.use(bodyParser.json());
 
 daemon.use(cors({ origin: true }));
 daemon.options('*', cors());
@@ -80,4 +82,6 @@ daemon.get('/getProfile/:uuid', function(req, res){
 
 });
 
-daemon.listen(3000);
+daemon.listen(config.listenOn, function(err){
+  console.log('listening on:', config.listenOn);
+});

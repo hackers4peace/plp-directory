@@ -1,18 +1,23 @@
 {
-  "name": "nodejs-plp-directory-impl",
-  "version": "0.0.0",
+  "name": "plp-directory",
+  "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "daemon.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hackers4peace/plp-directory"
+  },
   "author": "",
-  "license": "ISC",
+  "license": "Unlicense",
   "dependencies": {
-    "body-parser": "~1.5.0",
     "express": "~4.6.1",
-    "lodash": "^2.4.1",
+    "cors": "~2.4.2",
+    "body-parser": "~1.5.0",
     "superagent": "~0.18.2",
+    "lodash": "^2.4.1",
     "uuid": "^1.4.1"
   },
   "devDependencies": {

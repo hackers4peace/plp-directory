@@ -1,3 +1,4 @@
 module.exports = {
-	domain : 'directory.plp.hackers4peace.net'
+  domain : 'localhost',
+  listenOn: '6000'
 };
