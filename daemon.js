@@ -24,38 +24,47 @@ daemon.post('/', function(req, res){
   var uri = config.domain + '/' + uuid;
   var path = 'data/'+ uuid;
 
-  // delete context FIXME
-  delete profile["@context"];
-  var listing = {
-    "@id": uri,
-    "@type": "Listing",
-    "about": profile
-  };
-
   // TODO fetch profile from provider
+  // FIXME use application/ld+json
+  superagent.get(profile["@id"])
+    .end(function(provRes){
+      if(provRes.ok){
 
-  // Save to filesystem
-  fs.writeFile(path, JSON.stringify(listing), function (err) {
+        // delete context FIXME
+        delete provRes.body["@context"];
 
-    if (err) {
-      console.log(err);
-      res.send(500);
-      throw err;
-    }
+        var listing = {
+          "@id": uri,
+          "@type": "Listing",
+          "about": provRes.body
+        };
 
-    console.log('Saved profile to:', path);
+        // Save to filesystem
+        fs.writeFile(path, JSON.stringify(listing), function (err) {
 
-    // Reference to this listing should be appended to the profile before returning it
-    var tiny = {
-      "@context": "http://plp.hackers4peace.net/context.jsonld",
-      "@id": uri,
-      "@type": "Listing"
-    };
+          if (err) {
+            console.log(err);
+            res.send(500);
+            throw err;
+          }
 
-    res.send(200, tiny);
+          console.log('Saved profile to:', path);
 
-  });
+          // Reference to this listing should be appended to the profile before returning it
+          var tiny = {
+            "@context": "http://plp.hackers4peace.net/context.jsonld",
+            "@id": uri,
+            "@type": "Listing"
+          };
 
+          res.type('json');
+          res.send(200, tiny);
+
+        });
+      } else {
+        console.log('failed fetching', profile["@id"]);
+      }
+    });
 });
 
 // getProfiles: Returns the profiles listed on this plp-directory
@@ -87,6 +96,7 @@ daemon.get('/', function(req, res){
   };
 
   // Once all files have been looped, return the JSON object
+  res.type('json');
   res.send(200,JSON.stringify(result));
 
 });
