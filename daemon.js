@@ -30,13 +30,15 @@ daemon.post('/', function(req, res){
     .end(function(provRes){
       if(provRes.ok){
 
+        var fullProfile = JSON.parse(provRes.body);
+
         // delete context FIXME
-        delete provRes.body["@context"];
+        delete fullProfile["@context"];
 
         var listing = {
           "@id": uri,
           "@type": "Listing",
-          "about": provRes.body
+          about: fullProfile
         };
 
         // Save to filesystem
@@ -57,8 +59,7 @@ daemon.post('/', function(req, res){
             "@type": "Listing"
           };
 
-          res.type('json');
-          res.send(200, tiny);
+          res.json(tiny);
 
         });
       } else {
@@ -96,8 +97,7 @@ daemon.get('/', function(req, res){
   };
 
   // Once all files have been looped, return the JSON object
-  res.type('json');
-  res.send(200,JSON.stringify(result));
+  res.json(JSON.stringify(result));
 
 });
 
