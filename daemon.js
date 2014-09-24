@@ -86,7 +86,7 @@ daemon.get('/', function(req, res){
     // FIXME .gitkeep :S
     if(data){
       // Append the URI of the profile on the profiles Object.
-      listings.push(data);
+      listings.push(JSON.parse(data));
     }
 
   });
@@ -97,7 +97,7 @@ daemon.get('/', function(req, res){
   };
 
   // Once all files have been looped, return the JSON object
-  res.json(JSON.stringify(result));
+  res.json(result);
 
 });
 
