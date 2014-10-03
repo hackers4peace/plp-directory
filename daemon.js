@@ -6,6 +6,7 @@ var superagent = require('superagent');
 var UUID = require('uuid');
 var _ = require('lodash');
 var config = require('./config');
+var Promise = require("promised-io");
 
 var CONTEXT_URI = "http://plp.hackers4peace.net/context.jsonld";
 
@@ -71,33 +72,53 @@ daemon.post('/', function(req, res){
 // getProfiles: Returns the profiles listed on this plp-directory
 daemon.get('/', function(req, res){
 
-  // FIXME: Read files asynchronously and add error checking (file does not exist)
+  // Wrap the io functions with ones that return promises.
+  var readdir_promise = Promise.convertNodeAsyncFunction(fs.readdir);
+  var readFile_promise = Promise.convertNodeAsyncFunction(fs.readFile);
 
-  // Create object to store profile URIs
-  var listings = [];
+  p = readdir_promise( config.datapath );
+  p.then( function( files ) {
 
-  // Loop through the listings folder and append URIs to be returned
-  var files = fs.readdirSync('data/');
+      // Create an array of promises
+      var promises = [];
+      var listings = [];
 
-  files.forEach( function (file) {
+      for ( var i = 0; i < files.length; i++ ) {
 
-    var data = fs.readFileSync('data/'+file,{encoding:"utf8"});
+          promises.push( readFile_promise(config.datapath+files[i] ) );
+          console.log(files[i]);
 
-    // FIXME .gitkeep :S
-    if(data){
-      // Append the URI of the profile on the profiles Object.
-      listings.push(JSON.parse(data));
-    }
+      }
+
+      group = Promise.all(promises);
+      group.then( function(results) {
+
+          for ( i = 0; i < results.length; i++ ) {
+              console.log(results[i]);
+              listings.push(JSON.parse(results[i]));
+          }
+
+          var result = {
+            "@context": CONTEXT_URI,
+            "@graph": listings
+          };
+
+          // Once all files have been looped, return the JSON object
+          res.json(result);
+
+          console.log("Done reading files. returning " + result);
+
+      }, function( error ) {
+
+          console.log("Error reading files " + error);
+
+      });
+
+  }, function( error ) {
+
+      console.log( "readdir failed.");
 
   });
-
-  var result = {
-    "@context": CONTEXT_URI,
-    "@graph": listings
-  };
-
-  // Once all files have been looped, return the JSON object
-  res.json(result);
 
 });
 
