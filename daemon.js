@@ -6,7 +6,7 @@ var superagent = require('superagent');
 var UUID = require('uuid');
 var _ = require('lodash');
 var config = require('./config');
-var Promise = require("promised-io");
+var Promise = require('es6-promises');
 
 var CONTEXT_URI = "http://plp.hackers4peace.net/context.jsonld";
 
@@ -69,57 +69,39 @@ daemon.post('/', function(req, res){
     });
 });
 
+// returns a promise which resolves with JSON object from file
+function readFile(name){
+  return new Promise(function(resolve, reject){
+    fs.readFile(config.dataPath + name, function(err, buffer){
+      if(err) reject(err);
+      resolve(JSON.parse(buffer.toString()));
+    });
+  });
+}
+
 // getProfiles: Returns the profiles listed on this plp-directory
 daemon.get('/', function(req, res){
 
-  // Wrap the io functions with ones that return promises.
-  var readdir_promise = Promise.convertNodeAsyncFunction(fs.readdir);
-  var readFile_promise = Promise.convertNodeAsyncFunction(fs.readFile);
+  fs.readdir(config.dataPath, function(err, files){
+    if(err) return console.log( "readdir failed.", err);
 
-  p = readdir_promise( config.datapath );
-  p.then( function( files ) {
+    //remove .gitkeep
+    _.remove(files, function(name){ return name === ".gitkeep"; });
+  console.log(files.map(readFile));
 
-      // Create an array of promises
-      var promises = [];
-      var listings = [];
+    Promise.all(files.map(readFile)).then(function(listings) {
+      var result = {
+        "@context": CONTEXT_URI,
+        "@graph": listings
+      };
+      res.json(result);
 
-      for ( var i = 0; i < files.length; i++ ) {
+      console.log("Done reading files. returning " + result);
 
-          promises.push( readFile_promise(config.datapath+files[i] ) );
-          console.log(files[i]);
-
-      }
-
-      group = Promise.all(promises);
-      group.then( function(results) {
-
-          for ( i = 0; i < results.length; i++ ) {
-              console.log(results[i]);
-              listings.push(JSON.parse(results[i]));
-          }
-
-          var result = {
-            "@context": CONTEXT_URI,
-            "@graph": listings
-          };
-
-          // Once all files have been looped, return the JSON object
-          res.json(result);
-
-          console.log("Done reading files. returning " + result);
-
-      }, function( error ) {
-
-          console.log("Error reading files " + error);
-
-      });
-
-  }, function( error ) {
-
-      console.log( "readdir failed.");
-
+    }).catch(function(err){
+      console.log( "readdir failed.", err);
+    });
   });
-
 });
 
 
