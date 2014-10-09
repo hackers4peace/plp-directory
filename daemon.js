@@ -8,7 +8,7 @@ var _ = require('lodash');
 var config = require('./config');
 var Promise = require('es6-promises');
 
-var CONTEXT_URI = "http://plp.hackers4peace.net/context.jsonld";
+var CONTEXT_URI = "http://plp.hackers4peace.net/context";
 
 var daemon = express();
 daemon.use(bodyParser.json({ type: 'application/ld+json' }));
