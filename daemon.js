@@ -11,7 +11,7 @@ var Promise = require('es6-promises');
 var CONTEXT_URI = "http://plp.hackers4peace.net/context.jsonld";
 
 var daemon = express();
-daemon.use(bodyParser.json());
+daemon.use(bodyParser.json({ type: 'application/ld+json' }));
 
 daemon.use(cors({ origin: true }));
 daemon.options('*', cors());
@@ -25,13 +25,13 @@ daemon.post('/', function(req, res){
   var uri = config.domain + '/' + uuid;
   var path = 'data/'+ uuid;
 
-  // TODO fetch profile from provider
-  // FIXME use application/ld+json
-  superagent.get(profile["@id"])
+  superagent.get(profile['@id'])
+    .accept('application/ld+json')
+    .buffer()
     .end(function(provRes){
       if(provRes.ok){
 
-        var fullProfile = JSON.parse(provRes.body);
+        var fullProfile = JSON.parse(provRes.text);
 
         // delete context FIXME
         delete fullProfile["@context"];
