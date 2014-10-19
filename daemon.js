@@ -22,7 +22,7 @@ daemon.post('/', function(req, res){
   // Get the URI where the profile is stored from requesr
   var profile = req.body;
   var uuid = UUID.v4();
-  var uri = config.domain + '/' + uuid;
+  var uri = 'http://' + config.domain + '/' + uuid;
   var path = 'data/'+ uuid;
 
   superagent.get(profile['@id'])
