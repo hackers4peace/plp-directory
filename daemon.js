@@ -16,6 +16,16 @@ daemon.use(bodyParser.json({ type: 'application/ld+json' }));
 daemon.use(cors({ origin: true }));
 daemon.options('*', cors());
 
+// returns a promise which resolves with JSON object from file
+function readFile(name){
+	return new Promise(function(resolve, reject){
+		fs.readFile(config.dataPath + name, function(err, buffer){
+			if(err) reject(err);
+			resolve(JSON.parse(buffer.toString()));
+		});
+	});
+}
+
 // listProfile: Receives the URI (probably from a plp-editor) and adds it to the list
 daemon.post('/', function(req, res){
 
@@ -99,16 +109,6 @@ daemon.post('/', function(req, res){
 	});
 
 });
-
-// returns a promise which resolves with JSON object from file
-function readFile(name){
-	return new Promise(function(resolve, reject){
-		fs.readFile(config.dataPath + name, function(err, buffer){
-			if(err) reject(err);
-			resolve(JSON.parse(buffer.toString()));
-		});
-	});
-}
 
 // getProfiles: Returns the profiles listed on this plp-directory
 daemon.get('/', function(req, res){
