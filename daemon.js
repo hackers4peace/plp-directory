@@ -36,14 +36,14 @@ daemon.post('/', function(req, res){
 
 		Promise.all(files.map(readFile)).then(function(listings) {
 
-			for (listing in listings){
+			for (var listing in listings){
 
 				if (listing["about"]["@id"] == profile["@id"]){
 
 					uuid = listing["@id"].split("/").pop();
 					uri = 'http://' + config.domain + '/' + uuid;
 					path = 'data/'+ uuid;
-					
+					break;
 				}
 
 			}
