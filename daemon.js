@@ -44,53 +44,52 @@ daemon.post('/', function(req, res){
 					uri = 'http://' + config.domain + '/' + uuid;
 					path = 'data/'+ uuid;
 
-					superagent.get(profile['@id'])
-						.accept('application/ld+json')
-						.buffer()
-						.end(function(provRes){
-							if(provRes.ok){
-
-								var fullProfile = JSON.parse(provRes.text);
-
-								// delete context FIXME
-								delete fullProfile["@context"];
-
-								var listing = {
-									"@id": uri,
-									"@type": "Listing",
-									about: fullProfile
-								};
-
-								// Save to filesystem
-								fs.writeFile(path, JSON.stringify(listing), function (err) {
-
-									if (err) {
-										console.log(err);
-										res.send(500);
-										throw err;
-									}
-
-									console.log('Saved profile to:', path);
-
-									// Reference to this listing should be appended to the profile before returning it
-									var tiny = {
-										"@context": "http://plp.hackers4peace.net/context.jsonld",
-										"@id": uri,
-										"@type": "Listing"
-									};
-
-									res.json(tiny);
-
-								});
-							} else {
-								console.log('failed fetching', profile["@id"]);
-							}
-
-						});
-						
 				}
 
 			}
+
+			superagent.get(profile['@id'])
+				.accept('application/ld+json')
+				.buffer()
+				.end(function(provRes){
+					if(provRes.ok){
+
+						var fullProfile = JSON.parse(provRes.text);
+
+						// delete context FIXME
+						delete fullProfile["@context"];
+
+						var listing = {
+							"@id": uri,
+							"@type": "Listing",
+							about: fullProfile
+						};
+
+						// Save to filesystem
+						fs.writeFile(path, JSON.stringify(listing), function (err) {
+
+							if (err) {
+								console.log(err);
+								res.send(500);
+								throw err;
+							}
+
+							console.log('Saved profile to:', path);
+
+							// Reference to this listing should be appended to the profile before returning it
+							var tiny = {
+								"@context": "http://plp.hackers4peace.net/context.jsonld",
+								"@id": uri,
+								"@type": "Listing"
+							};
+
+							res.json(tiny);
+
+						});
+					} else {
+						console.log('failed fetching', profile["@id"]);
+					}
+				});
 
 			console.log("Done reading files. returning " + result);
 
