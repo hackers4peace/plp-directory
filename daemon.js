@@ -43,7 +43,7 @@ daemon.post('/', function(req, res){
 					uuid = listing["@id"].split("/").pop();
 					uri = 'http://' + config.domain + '/' + uuid;
 					path = 'data/'+ uuid;
-					break;
+					
 				}
 
 			}
