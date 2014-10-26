@@ -48,9 +48,9 @@ daemon.post('/', function(req, res){
 
 			for (var listing in listings){
 
-				if (listing["about"]["@id"] == profile["@id"]){
+				if (listings[listing]["about"]["@id"] == profile["@id"]){
 
-					uuid = listing["@id"].split("/").pop();
+					uuid = listings[listing]["@id"].split("/").pop();
 					uri = 'http://' + config.domain + '/' + uuid;
 					path = 'data/'+ uuid;
 
