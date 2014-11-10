@@ -16,6 +16,53 @@ daemon.use(bodyParser.json({ type: 'application/ld+json' }));
 daemon.use(cors({ origin: true }));
 daemon.options('*', cors());
 
+// returns a promise which resolves with JSON object from file
+function readFile(name){
+  return new Promise(function(resolve, reject){
+    fs.readFile(config.dataPath + name, function(err, buffer){
+      if(err) reject(err);
+      resolve(JSON.parse(buffer.toString()));
+    });
+  });
+}
+
+var storage = {
+  getAll: function(uuid){
+    return new Promise(function(resolve, reject){
+      fs.readdir(config.dataPath, function(err, files){
+        if(err) reject(err);
+        //remove .gitkeep
+        _.remove(files, function(name){ return name === ".gitkeep"; });
+        Promise.all(files.map(readFile)).then(function(listings) {
+          var result = {
+            "@context": CONTEXT_URI,
+            "@graph": listings
+          };
+          resolve(result);
+        }).catch(reject);
+      });
+    });
+  },
+  save: function(uuid, content){
+    return new Promise(function(resolve, reject){
+      var path = config.dataPath + '/' + uuid;
+      fs.writeFile(path, JSON.stringify(content), function(err, data){
+        if(err) reject(err);
+        resolve(content);
+      });
+    });
+  },
+  delete: function(uuid){
+    return new Promise(function(resolve, reject){
+      var path = config.dataPath + '/' + uuid;
+      fs.unlink(path, function(err){
+        if(err) reject(err);
+        resolve();
+      });
+    });
+  },
+};
+
 // listProfile: Receives the URI (probably from a plp-editor) and adds it to the list
 daemon.post('/', function(req, res){
 
@@ -42,66 +89,38 @@ daemon.post('/', function(req, res){
           about: fullProfile
         };
 
-        // Save to filesystem
-        fs.writeFile(path, JSON.stringify(listing), function (err) {
-
-          if (err) {
-            console.log(err);
+        storage.save(uuid, listing)
+          .then(function(data){
+            var min = {
+              "@context": "http://plp.hackers4peace.net/context.jsonld",
+              "@id": data["@id"],
+              "@type": "Listing"
+            };
+            res.type('application/ld+json');
+            res.send(min);
+          })
+          .catch(function(err){
+            // TODO add error reporting
             res.send(500);
-            throw err;
-          }
-
-          console.log('Saved profile to:', path);
-
+          });
           // Reference to this listing should be appended to the profile before returning it
-          var tiny = {
-            "@context": "http://plp.hackers4peace.net/context.jsonld",
-            "@id": uri,
-            "@type": "Listing"
-          };
-
-          res.json(tiny);
-
-        });
       } else {
         console.log('failed fetching', profile["@id"]);
       }
     });
 });
 
-// returns a promise which resolves with JSON object from file
-function readFile(name){
-  return new Promise(function(resolve, reject){
-    fs.readFile(config.dataPath + name, function(err, buffer){
-      if(err) reject(err);
-      resolve(JSON.parse(buffer.toString()));
-    });
-  });
-}
-
 // getProfiles: Returns the profiles listed on this plp-directory
 daemon.get('/', function(req, res){
-
-  fs.readdir(config.dataPath, function(err, files){
-    if(err) return console.log( "readdir failed.", err);
-
-    //remove .gitkeep
-    _.remove(files, function(name){ return name === ".gitkeep"; });
-  console.log(files.map(readFile));
-
-    Promise.all(files.map(readFile)).then(function(listings) {
-      var result = {
-        "@context": CONTEXT_URI,
-        "@graph": listings
-      };
-      res.json(result);
-
-      console.log("Done reading files. returning " + result);
-
-    }).catch(function(err){
-      console.log( "readdir failed.", err);
+  storage.getAll()
+    .then(function(data){
+      res.type('application/ld+json');
+      res.send(data);
+    })
+    .catch(function(err){
+      // TODO add error reporting
+      res.send(500);
     });
-  });
 });
 
 
