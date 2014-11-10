@@ -134,6 +134,18 @@ daemon.get('/', function(req, res){
     });
 });
 
+daemon.delete('/:uuid', function(req, res){
+  // TODO add authentication
+  storage.delete(req.params.uuid)
+    .then(function(){
+      res.send(200);
+    })
+    .catch(function(err){
+      // TODO add error reporting
+      res.send(500);
+    });
+});
+
 
 daemon.listen(config.listenOn, function(err){
   console.log('listening on:', config.listenOn);
