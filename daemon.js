@@ -27,7 +27,7 @@ function readFile(name){
 }
 
 var storage = {
-  getAll: function(uuid){
+  getAll: function(){
     return new Promise(function(resolve, reject){
       fs.readdir(config.dataPath, function(err, files){
         if(err) reject(err);
@@ -79,46 +79,66 @@ function fetchProfile(uri){
   });
 }
 
+function checkIfNew(uri){
+      console.log(uri);
+  return new Promise(function(resolve, reject){
+    storage.getAll().then(function(all){
+      var existing = _.find(all['@graph'], function(listing){ return listing.about['@id'] == uri; });
+      console.log(existing);
+      if(existing) {
+        reject();
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 // listProfile: Receives the URI (probably from a plp-editor) and adds it to the list
 daemon.post('/', function(req, res){
 
   // Get the URI where the profile is stored from requesr
   var profileUri = req.body['@id'];
-  var uuid = UUID.v4();
-  var uri = 'http://' + config.domain + '/' + uuid;
-  var path = 'data/'+ uuid;
 
-  fetchProfile(profileUri)
-    .then(function(profile){
-      // delete context FIXME
-      delete profile["@context"];
+  checkIfNew(profileUri).then(function(){
+    var uuid = UUID.v4();
+    var uri = 'http://' + config.domain + '/' + uuid;
+    var path = 'data/'+ uuid;
 
-      var listing = {
-        "@id": uri,
-        "@type": "Listing",
-        about: profile
-      };
+    fetchProfile(profileUri)
+      .then(function(profile){
+        // delete context FIXME
+        delete profile["@context"];
 
-      storage.save(uuid, listing)
-        .then(function(data){
-          var min = {
-            "@context": "http://plp.hackers4peace.net/context.jsonld",
-            "@id": data["@id"],
-            "@type": "Listing"
-          };
-          res.type('application/ld+json');
-          res.send(min);
-        })
-        .catch(function(err){
-          // TODO add error reporting
-          res.send(500);
-        });
+        var listing = {
+          "@id": uri,
+          "@type": "Listing",
+          about: profile
+        };
 
-    }).catch(function(){
-      console.log('failed fetching', profileUri);
-      // TODO add error reporting
-      res.send(500);
-    });
+        storage.save(uuid, listing)
+          .then(function(data){
+            var min = {
+              "@context": "http://plp.hackers4peace.net/context.jsonld",
+              "@id": data["@id"],
+              "@type": "Listing"
+            };
+            res.type('application/ld+json');
+            res.send(min);
+          })
+          .catch(function(err){
+            // TODO add error reporting
+            res.send(500);
+          });
+
+      }).catch(function(){
+        console.log('failed fetching', profileUri);
+        // TODO add error reporting
+        res.send(500);
+      });
+  }, function(){
+    res.send(409);
+  });
 });
 
 // getProfiles: Returns the profiles listed on this plp-directory
