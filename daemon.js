@@ -63,50 +63,61 @@ var storage = {
   },
 };
 
+function fetchProfile(uri){
+  return new Promise(function(resolve, reject){
+    superagent.get(uri)
+      .accept('application/ld+json')
+      .buffer()
+      .end(function(provRes){
+        if(provRes.ok){
+          // FIXME handle parsing errors
+          resolve(JSON.parse(provRes.text));
+        } else {
+          reject();
+        }
+      });
+  });
+}
+
 // listProfile: Receives the URI (probably from a plp-editor) and adds it to the list
 daemon.post('/', function(req, res){
 
   // Get the URI where the profile is stored from requesr
-  var profile = req.body;
+  var profileUri = req.body['@id'];
   var uuid = UUID.v4();
   var uri = 'http://' + config.domain + '/' + uuid;
   var path = 'data/'+ uuid;
 
-  superagent.get(profile['@id'])
-    .accept('application/ld+json')
-    .buffer()
-    .end(function(provRes){
-      if(provRes.ok){
+  fetchProfile(profileUri)
+    .then(function(profile){
+      // delete context FIXME
+      delete profile["@context"];
 
-        var fullProfile = JSON.parse(provRes.text);
+      var listing = {
+        "@id": uri,
+        "@type": "Listing",
+        about: profile
+      };
 
-        // delete context FIXME
-        delete fullProfile["@context"];
+      storage.save(uuid, listing)
+        .then(function(data){
+          var min = {
+            "@context": "http://plp.hackers4peace.net/context.jsonld",
+            "@id": data["@id"],
+            "@type": "Listing"
+          };
+          res.type('application/ld+json');
+          res.send(min);
+        })
+        .catch(function(err){
+          // TODO add error reporting
+          res.send(500);
+        });
 
-        var listing = {
-          "@id": uri,
-          "@type": "Listing",
-          about: fullProfile
-        };
-
-        storage.save(uuid, listing)
-          .then(function(data){
-            var min = {
-              "@context": "http://plp.hackers4peace.net/context.jsonld",
-              "@id": data["@id"],
-              "@type": "Listing"
-            };
-            res.type('application/ld+json');
-            res.send(min);
-          })
-          .catch(function(err){
-            // TODO add error reporting
-            res.send(500);
-          });
-          // Reference to this listing should be appended to the profile before returning it
-      } else {
-        console.log('failed fetching', profile["@id"]);
-      }
+    }).catch(function(){
+      console.log('failed fetching', profileUri);
+      // TODO add error reporting
+      res.send(500);
     });
 });
 
