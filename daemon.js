@@ -8,8 +8,6 @@ var _ = require('lodash');
 var config = require('./config');
 var Promise = require('es6-promises');
 
-var CONTEXT_URI = "http://plp.hackers4peace.net/context";
-
 var daemon = express();
 daemon.use(bodyParser.json({ type: 'application/ld+json' }));
 
@@ -31,11 +29,12 @@ var storage = {
     return new Promise(function(resolve, reject){
       fs.readdir(config.dataPath, function(err, files){
         if(err) reject(err);
-        //remove .gitkeep
+        //remove .gitkeep & .DS_Store
         _.remove(files, function(name){ return name === ".gitkeep"; });
+        _.remove(files, function(name){ return name === ".DS_Store"; });
         Promise.all(files.map(readFile)).then(function(listings) {
           var result = {
-            "@context": CONTEXT_URI,
+            "@context": config.context,
             "@graph": listings
           };
           resolve(result);
